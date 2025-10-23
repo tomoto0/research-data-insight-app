@@ -1,5 +1,13 @@
 {
   "version": "7",
   "dialect": "mysql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1761205097537,
+      "tag": "0000_living_rafael_vega",
+      "breakpoints": true
+    }
+  ]
 }
