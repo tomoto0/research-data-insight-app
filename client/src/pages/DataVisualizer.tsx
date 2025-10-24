@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { trpc } from '@/lib/trpc';
@@ -83,24 +83,21 @@ export default function DataVisualizer() {
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    if (e.currentTarget instanceof HTMLElement) {
-      e.currentTarget.classList.add('drag');
-    }
+    e.stopPropagation();
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
-    if (e.currentTarget instanceof HTMLElement) {
-      e.currentTarget.classList.remove('drag');
-    }
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    if (e.currentTarget instanceof HTMLElement) {
-      e.currentTarget.classList.remove('drag');
-    }
+    e.stopPropagation();
     const file = e.dataTransfer.files?.[0];
-    if (file) handleFileUpload(file);
+    if (file && file.type === 'text/csv' || file.name.endsWith('.csv')) {
+      handleFileUpload(file);
+    }
   };
 
   const handleDownloadChart = () => {
@@ -119,14 +116,18 @@ export default function DataVisualizer() {
     if (rows.length === 0) return;
     
     setShowAIInsights(true);
+
     try {
-      const columnsToAnalyze = selectedDatasets.length > 0 ? selectedDatasets : [valueColumn];
-      await generateInsightsMutation.mutateAsync({
+      const result = await generateInsightsMutation.mutateAsync({
         headers,
-        rows: rows.slice(0, 100), // Limit to first 100 rows for API
+        rows,
         chartType,
-        selectedColumns: columnsToAnalyze,
+        selectedColumns: selectedDatasets.length > 0 ? selectedDatasets : [valueColumn],
       });
+      
+      if (result) {
+        // Insights will be displayed in the AIInsights component
+      }
     } catch (error) {
       console.error('Failed to generate insights:', error);
     }
@@ -142,45 +143,20 @@ export default function DataVisualizer() {
     setChartType('line');
     setLabelColumn(0);
     setValueColumn(1);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-gradient-to-r from-blue-600 to-pink-600 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-white">Data Insight Generator</h1>
-            <p className="text-sm text-blue-100">Upload CSV and turn it into beautiful, AI-analyzed charts</p>
-          </div>
-          <div className="flex gap-3">
-            <Button
-              onClick={handleDownloadChart}
-              disabled={rows.length === 0}
-              variant="outline"
-              className="text-white border-white hover:bg-white/20"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Save Chart
-            </Button>
-            <Button
-              onClick={handleReset}
-              variant="outline"
-              className="text-white border-white hover:bg-white/20"
-            >
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Reset
-            </Button>
-          </div>
-        </div>
-      </header>
+      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white p-6 shadow-lg">
+        <h1 className="text-3xl font-bold">Data Insight Generator</h1>
+        <p className="text-blue-100 mt-1">Upload CSV and turn it into beautiful, AI-analyzed charts</p>
+      </div>
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto p-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left Sidebar - Controls */}
+          {/* Controls Panel */}
           <div className="lg:col-span-1">
             <DataControls
               fileName={fileName}
@@ -215,60 +191,87 @@ export default function DataVisualizer() {
             />
           </div>
 
-          {/* Right Content - Chart and AI Insights */}
+          {/* Chart & AI Insights Panel */}
           <div className="lg:col-span-3 space-y-6">
-            {/* Chart Card */}
+            {/* Top Action Buttons */}
+            <div className="flex gap-3 justify-end">
+              <Button
+                onClick={handleDownloadChart}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Save Chart
+              </Button>
+              <Button
+                onClick={handleReset}
+                variant="destructive"
+              >
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Reset
+              </Button>
+            </div>
+
+            {/* Chart Preview */}
             <Card className="bg-slate-800/50 border-slate-700 p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-white">Chart Preview</h2>
-                {rows.length > 0 && (
-                  <Button
-                    onClick={handleGenerateInsights}
-                    disabled={generateInsightsMutation.isPending}
-                    className="bg-gradient-to-r from-blue-500 to-pink-500 hover:from-blue-600 hover:to-pink-600 text-white"
-                  >
-                    {generateInsightsMutation.isPending ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Analyzing...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        AI Insights
-                      </>
-                    )}
-                  </Button>
+              <h2 className="text-lg font-semibold text-white mb-4">Chart Preview</h2>
+              <div className="bg-slate-900 rounded-lg p-4 min-h-96">
+                {rows.length > 0 ? (
+                  <ChartCanvas
+                    ref={null}
+                    headers={headers}
+                    rows={rows}
+                    hasHeader={hasHeader}
+                    chartType={chartType}
+                    labelColumn={labelColumn}
+                    valueColumn={valueColumn}
+                    selectedDatasets={selectedDatasets}
+                    datasetColors={datasetColors}
+                    palette={palette}
+                    baseColor={baseColor}
+                    canvasBg={canvasBg}
+                    textColor={textColor}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-96 text-slate-400">
+                    <p>Upload a CSV file to see the chart preview</p>
+                  </div>
                 )}
               </div>
-              <ChartCanvas
-                headers={headers}
-                rows={rows}
-                hasHeader={hasHeader}
-                chartType={chartType}
-                labelColumn={labelColumn}
-                valueColumn={valueColumn}
-                selectedDatasets={selectedDatasets}
-                datasetColors={datasetColors}
-                palette={palette}
-                baseColor={baseColor}
-                canvasBg={canvasBg}
-                textColor={textColor}
-              />
             </Card>
+
+            {/* AI Insights Button */}
+            <div className="flex justify-center">
+              <Button
+                onClick={handleGenerateInsights}
+                disabled={rows.length === 0 || generateInsightsMutation.isPending}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+              >
+                {generateInsightsMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    AI Insights
+                  </>
+                )}
+              </Button>
+            </div>
 
             {/* AI Insights Panel */}
             {showAIInsights && (
               <AIInsights
-                insights={generateInsightsMutation.data}
                 isLoading={generateInsightsMutation.isPending}
-                error={generateInsightsMutation.error as Error | null}
+                insights={generateInsightsMutation.data}
+                error={generateInsightsMutation.error ? new Error(String(generateInsightsMutation.error)) : null}
                 onClose={() => setShowAIInsights(false)}
               />
             )}
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

@@ -78,23 +78,25 @@ export const DataControls: React.FC<DataControlsProps> = ({
       {/* Upload Section */}
       <div className="space-y-2">
         <h3 className="text-sm font-semibold text-white">1) Upload CSV</h3>
-        <div
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".csv,text/csv"
+          onChange={handleFileInputChange}
+          className="hidden"
+          id="csv-file-input"
+        />
+        <label
+          htmlFor="csv-file-input"
           onDragOver={onDragOver}
           onDragLeave={onDragLeave}
           onDrop={onDrop}
-          className="border-2 border-dashed border-slate-600 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition-colors bg-slate-900/50"
+          className="border-2 border-dashed border-slate-600 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition-colors bg-slate-900/50 block"
         >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".csv,text/csv"
-            onChange={handleFileInputChange}
-            className="hidden"
-          />
           <Upload className="w-6 h-6 mx-auto mb-2 text-slate-400" />
           <p className="text-sm text-slate-300">Drop CSV here or click to select</p>
           <p className="text-xs text-slate-500 mt-1">First row is treated as header by default</p>
-        </div>
+        </label>
         {fileName && <p className="text-xs text-blue-400">Loaded: {fileName}</p>}
       </div>
 
