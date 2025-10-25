@@ -26,6 +26,7 @@ export default function DataVisualizer() {
   const [showAIInsights, setShowAIInsights] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const chartCanvasRef = useRef<HTMLCanvasElement | null>(null);
   
   // tRPC mutations for AI features
   const generateInsightsMutation = trpc.ai.generateDataInsights.useMutation();
@@ -101,7 +102,7 @@ export default function DataVisualizer() {
   };
 
   const handleDownloadChart = () => {
-    const canvas = document.querySelector('canvas') as HTMLCanvasElement;
+    const canvas = chartCanvasRef.current;
     if (canvas) {
       const link = document.createElement('a');
       link.download = `chart-${Date.now()}.png`;
@@ -109,6 +110,8 @@ export default function DataVisualizer() {
       document.body.appendChild(link);
       link.click();
       link.remove();
+    } else {
+      console.warn('Canvas not found for download');
     }
   };
 
@@ -217,7 +220,7 @@ export default function DataVisualizer() {
               <div className="bg-slate-900 rounded-lg p-4 min-h-96">
                 {rows.length > 0 ? (
                   <ChartCanvas
-                    ref={null}
+                    ref={chartCanvasRef}
                     headers={headers}
                     rows={rows}
                     hasHeader={hasHeader}
