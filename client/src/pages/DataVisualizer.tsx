@@ -31,6 +31,7 @@ export default function DataVisualizer() {
   // tRPC mutations for AI features
   const generateInsightsMutation = trpc.ai.generateDataInsights.useMutation();
   const generateCaptionMutation = trpc.ai.generateChartCaption.useMutation();
+  const optimizeChartMutation = trpc.ai.optimizeChartStyle.useMutation();
 
   // Load sample data on mount
   useEffect(() => {
@@ -148,6 +149,49 @@ export default function DataVisualizer() {
     setValueColumn(1);
   };
 
+  const handleOptimizeChart = async () => {
+    if (rows.length === 0 || headers.length === 0) return;
+
+    try {
+      // Detect data types
+      const dataTypes: Record<string, string> = {};
+      headers.forEach((header, idx) => {
+        const sample = rows[0]?.[idx];
+        if (!isNaN(parseFloat(sample))) {
+          dataTypes[header] = 'numeric';
+        } else if (sample && sample.match(/^\d{4}-\d{2}-\d{2}/)) {
+          dataTypes[header] = 'date';
+        } else {
+          dataTypes[header] = 'categorical';
+        }
+      });
+
+      const result = await optimizeChartMutation.mutateAsync({
+        headers,
+        rows,
+        dataTypes,
+      });
+
+      if (result) {
+        setChartType(result.chartType);
+        setPalette(result.colorScheme);
+        // Apply the recommended colors
+        if (result.colorPalette && result.colorPalette.length > 0) {
+          setBaseColor(result.colorPalette[0]);
+          const newColors: Record<number, string> = {};
+          result.colorPalette.forEach((color: string, idx: number) => {
+            if (idx < headers.length) {
+              newColors[idx] = color;
+            }
+          });
+          setDatasetColors(newColors);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to optimize chart:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950">
       {/* Header */}
@@ -197,7 +241,24 @@ export default function DataVisualizer() {
           {/* Chart & AI Insights Panel */}
           <div className="lg:col-span-3 space-y-6">
             {/* Top Action Buttons */}
-            <div className="flex gap-3 justify-end">
+            <div className="flex gap-3 justify-end flex-wrap">
+              <Button
+                onClick={handleOptimizeChart}
+                disabled={rows.length === 0 || optimizeChartMutation.isPending}
+                className="bg-amber-600 hover:bg-amber-700 text-white"
+              >
+                {optimizeChartMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Optimizing...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    AI Optimize
+                  </>
+                )}
+              </Button>
               <Button
                 onClick={handleDownloadChart}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white"

@@ -83,6 +83,73 @@ ${rows.slice(0, 5).map(row => headers.map((h, i) => `${h}: ${row[i]}`).join(', '
         }
       }),
 
+    optimizeChartStyle: publicProcedure
+      .input(z.object({
+        headers: z.array(z.string()),
+        rows: z.array(z.array(z.any())),
+        dataTypes: z.record(z.string(), z.string()),
+      }))
+      .mutation(async ({ input }) => {
+        const { headers, rows, dataTypes } = input;
+        
+        // Prepare data summary for AI analysis
+        const dataSummary = `
+Dataset Analysis:
+- Columns: ${headers.join(', ')}
+- Data Types: ${headers.map(h => `${h}(${dataTypes[h] || 'unknown'})`).join(', ')}
+- Total Rows: ${rows.length}
+
+Sample Data (first 3 rows):
+${rows.slice(0, 3).map(row => headers.map((h, i) => `${h}: ${row[i]}`).join(', ')).join('\n')}`;
+
+        try {
+          const response = await invokeLLM({
+            messages: [
+              {
+                role: "system",
+                content: "You are a data visualization expert. Analyze the dataset and recommend the optimal chart type and color scheme. Return a JSON object with chartType, colorScheme, explanation, and colorPalette fields."
+              },
+              {
+                role: "user",
+                content: `Analyze this dataset and recommend the best chart type and colors:\n${dataSummary}\n\nConsider: 1) Data distribution and relationships 2) Number of categories and values 3) Readability and professional appearance 4) Best practices for data visualization\n\nRecommend chartType (bar, line, pie, doughnut), colorScheme (vibrant, pastel, professional, cool, warm), explanation (why this is best), and colorPalette (array of 5 hex colors).`
+              }
+            ],
+            response_format: {
+              type: "json_schema",
+              json_schema: {
+                name: "chart_optimization",
+                strict: true,
+                schema: {
+                  type: "object",
+                  properties: {
+                    chartType: { type: "string", enum: ["bar", "line", "pie", "doughnut"], description: "Recommended chart type" },
+                    colorScheme: { type: "string", enum: ["vibrant", "pastel", "professional", "cool", "warm"], description: "Color scheme name" },
+                    explanation: { type: "string", description: "Why this chart type and colors are best for this data" },
+                    colorPalette: { type: "array", items: { type: "string" }, description: "Array of 5 hex color codes" },
+                  },
+                  required: ["chartType", "colorScheme", "explanation", "colorPalette"],
+                  additionalProperties: false,
+                },
+              },
+            },
+          });
+
+          const content = response.choices[0]?.message?.content;
+          if (typeof content === 'string') {
+            return JSON.parse(content);
+          }
+          return { 
+            chartType: 'line', 
+            colorScheme: 'vibrant', 
+            explanation: 'Default recommendation',
+            colorPalette: ['#6b76ff', '#ff6b9d', '#4ecdc4', '#ffd93d', '#ff6b6b']
+          };
+        } catch (error) {
+          console.error('Failed to optimize chart style:', error);
+          throw error;
+        }
+      }),
+
     generateChartCaption: publicProcedure
       .input(z.object({
         chartType: z.string(),
@@ -117,3 +184,4 @@ ${rows.slice(0, 5).map(row => headers.map((h, i) => `${h}: ${row[i]}`).join(', '
 });
 
 export type AppRouter = typeof appRouter;
+
