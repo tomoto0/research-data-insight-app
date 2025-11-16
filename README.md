@@ -78,16 +78,16 @@ The application follows a modern full-stack architecture with clear separation o
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     Frontend (React 19)                      │
+│                     Frontend (React 19)                     │
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │ DataVisualizer (Main Component)                      │   │
 │  │ ├─ DataControls (CSV Upload & Configuration)         │   │
 │  │ ├─ ChartCanvas (Chart Rendering)                     │   │
 │  │ └─ AIInsights (AI Analysis Panel)                    │   │
 │  └──────────────────────────────────────────────────────┘   │
-│                          ↕ (tRPC)                            │
+│                          ↕ (tRPC)                           │
 ├─────────────────────────────────────────────────────────────┤
-│                    Backend (Express + tRPC)                  │
+│                    Backend (Express + tRPC)                 │
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │ tRPC Routers                                         │   │
 │  │ ├─ ai.generateDataInsights (Data Analysis)           │   │
@@ -95,9 +95,9 @@ The application follows a modern full-stack architecture with clear separation o
 │  │ ├─ ai.generateChartCaption (Caption Generation)      │   │
 │  │ └─ auth.* (Authentication)                           │   │
 │  └──────────────────────────────────────────────────────┘   │
-│                          ↕                                    │
+│                          ↕                                  │
 ├─────────────────────────────────────────────────────────────┤
-│                   External Services                          │
+│                   External Services                         │
 │  ├─ Manus LLM API (Data Analysis & Insights)                │
 │  ├─ Manus OAuth (User Authentication)                       │
 │  ├─ MySQL Database (Data Persistence)                       │
