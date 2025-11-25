@@ -16,6 +16,14 @@ This tool is designed for researchers, analysts, academics, and business profess
 
 ---
 
+## Main Screen
+
+![Data Insight Generator Main Screen](/screenshot.jpg)
+
+*Main Interface: Integrated CSV upload, chart configuration, and AI analysis features*
+
+---
+
 ## Key Features
 
 ### 📊 Data Visualization

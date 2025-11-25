@@ -2,7 +2,7 @@
 
 **CSVデータを美しいAI分析チャートに変換するフルスタックアプリケーション**
 
-![Data Insight Generator](./screenshot.png)
+![Data Insight Generator](/screenshot.jpg)
 
 **ライブデモ:** [https://datainsight-n7dcbp6y.manus.space](https://datainsight-n7dcbp6y.manus.space)
 
@@ -15,6 +15,14 @@ Research Data Insight Generatorは、OpenAIの「csv-to-charts」アプリをベ
 ユーザーはCSVファイルをアップロードするだけで、AIが自動的にデータを分析し、最適なチャートタイプと色スキームを推奨します。さらに、Manus LLM APIを活用した高度なデータ分析機能により、データセットの要約、主要な洞察の抽出、執筆時のアドバイスが自動生成されます。
 
 このアプリケーションは、研究者、データアナリスト、学生、ビジネスプロフェッショナルなど、短時間で高品質なデータ可視化を必要とするすべてのユーザーを対象としています。
+
+---
+
+## メイン画面
+
+![Data Insight Generator Main Screen](/screenshot.jpg)
+
+*メイン画面：CSVアップロード、チャート設定、AI分析機能を統合したインターフェース*
 
 ---
 
